@@ -1,0 +1,12 @@
+{
+  "name": "filelite-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Free, browser-based PDF and Office compression tool deployed as Cloudflare Worker static assets",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.45.0"
+  }
+}

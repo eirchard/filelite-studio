@@ -1,0 +1,8 @@
+{
+  // Existing Cloudflare Worker, preserve workers.dev URL
+  "name": "filelitestudio",
+  "compatibility_date": "2026-10-22",
+  "assets": {
+    "directory": "./public"
+  }
+}
