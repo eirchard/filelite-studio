@@ -62,6 +62,49 @@ body{background:#f5f9f4}
 
 .target-control input::placeholder{font:500 12px var(--font);letter-spacing:0;color:#a0afa8;opacity:1}
 .optional-label{background:#e8f4ed;color:#147b66;padding:5px 9px;border-radius:20px;font-weight:700}
+
+/* FileLite UI refinement — spacing, proportions and legibility only; 2026-10-22 */
+@media (min-width: 841px) {
+  :root { --fl-gutter: max(clamp(28px, 5vw, 90px), calc(50% - 680px)); }
+  .site-header, .hero, .trust-strip, .how-section, .site-footer { padding-inline: var(--fl-gutter); }
+  .privacy-section { margin-inline: var(--fl-gutter); }
+  .footnote { margin-inline: var(--fl-gutter); }
+  .hero { padding-block: 60px 76px; gap: clamp(36px, 4.2vw, 68px); grid-template-columns: minmax(0, 1fr) minmax(350px, 510px); }
+  .hero h1 { font-size: clamp(44px, 4.5vw, 72px); margin: 24px 0 18px; }
+  .hero-sub { line-height: 1.85; }
+  .hero-advantages { margin-top: 18px; gap: 18px; }
+  .hero-proof { margin-top: 23px; }
+  .compressor-panel { padding: 30px 32px 28px; }
+  .trust-strip { padding-block: 30px 34px; gap: 24px; }
+  .format-list { gap: 12px; }
+  .how-section { padding-block: 76px 80px; }
+  .steps-grid { margin-top: 34px; gap: 18px; }
+  .step-card { min-height: 220px; padding: 25px 26px 26px; }
+  .step-icon { margin-top: 14px; width: 44px; height: 44px; }
+  .step-card h3 { font-size: 16px; margin: 14px 0 6px; }
+  .privacy-section { padding: 30px 34px; }
+  .footnote { margin-top: 18px; margin-bottom: 54px; }
+  .site-footer { padding-block: 27px 30px; }
+}
+.section-intro p { font-size: 14px; line-height: 1.75; }
+.step-card p { font-size: 13px; line-height: 1.75; color: #718079; }
+.format-list>span { font-size: 11px; }
+.privacy-section p { font-size: 13px; line-height: 1.85; }
+.footnote { font-size: 12px; line-height: 1.8; }
+.site-footer p, .site-footer>span { font-size: 11px; }
+@media (min-width: 621px) and (max-width: 840px) {
+  .how-section { padding-block: 70px 76px; }
+  .steps-grid { margin-top: 34px; gap: 14px; }
+  .step-card { min-height: 218px; padding: 24px 20px; }
+}
+@media (max-width: 620px) {
+  .how-section { padding-block: 58px 64px; }
+  .step-card { min-height: 0; padding: 21px 22px; }
+  .step-card p { font-size: 13px; }
+  .section-intro p { font-size: 12px; line-height: 1.8; }
+  .privacy-section p { font-size: 12px; line-height: 1.85; }
+  .footnote { font-size: 11px; }
+}
 </style>
 </head>
 <body>
