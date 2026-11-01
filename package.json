@@ -4,7 +4,8 @@
   "private": true,
   "description": "Free, browser-based PDF and Office compression tool deployed as Cloudflare Worker static assets",
   "scripts": {
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "test": "node --test"
   },
   "devDependencies": {
     "wrangler": "^4.45.0"

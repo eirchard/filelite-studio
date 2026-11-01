@@ -105,6 +105,17 @@ body{background:#f5f9f4}
   .privacy-section p { font-size: 12px; line-height: 1.85; }
   .footnote { font-size: 11px; }
 }
+/* Web-app-quality-design-review: accessibility and PDF caution */
+.pdf-warning{margin:0 0 16px;padding:15px 16px;background:#fff9ec;border:1px solid #dbbf7d;border-radius:12px;color:#5c4b26}
+.pdf-warning strong{font-size:13px;line-height:1.5}
+.pdf-warning p{margin:7px 0 11px;font-size:12px;line-height:1.8;color:#63512e}
+.pdf-warning label{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.65;font-weight:700;cursor:pointer}
+.pdf-warning input{width:20px;height:20px;flex-shrink:0;margin:1px 0 0;accent-color:#087d69}
+:where(a,button,input,select):focus-visible{outline:3px solid #147e69;outline-offset:3px}
+.icon-btn{width:40px;height:40px}
+.panel-note,.field-hint,.drop-caption{font-size:12px;color:#54685d;line-height:1.7}
+.panel-heading p,.file-details span{color:#586b64}
+@media(max-width:620px){.pdf-warning{padding:13px}.panel-note,.field-hint,.drop-caption{font-size:11px}}
 </style>
 </head>
 <body>
@@ -178,8 +189,13 @@ body{background:#f5f9f4}
               <label class="quality-option"><input type="radio" name="quality" value="small"><span class="quality-top"><span class="quality-dot"></span><b>ไฟล์เล็ก</b></span><small>บีบอัดมาก</small></label>
             </div>
             <div class="target-heading"><div class="field-heading"><span class="field-number">02</span><h3>กำหนดขนาดไฟล์เป้าหมาย</h3></div><span class="optional-label">ไม่บังคับ</span></div>
-            <div class="target-control"><input id="targetSize" name="targetSize" type="number" inputmode="decimal" min="0.001" max="25600" step="any" placeholder="เว้นว่าง = อัตโนมัติ" aria-label="ขนาดไฟล์เป้าหมาย (ไม่บังคับ)"><select id="targetUnit" aria-label="หน่วยขนาดไฟล์"><option value="MB" selected>MB</option><option value="KB">KB</option></select></div>
+            <div class="target-control"><input id="targetSize" name="targetSize" type="number" inputmode="decimal" min="0.0009765625" max="25" step="any" placeholder="เว้นว่าง = อัตโนมัติ" aria-label="ขนาดไฟล์เป้าหมาย (ไม่บังคับ)"><select id="targetUnit" aria-label="หน่วยขนาดไฟล์"><option value="MB" selected>MB</option><option value="KB">KB</option></select></div>
             <p class="field-hint"><svg class="ico" aria-hidden="true"><use href="#ic-info"/></svg> เว้นว่างเพื่อบีบอัดอัตโนมัติ · หากระบุขนาด ระบบจะพยายามให้ใกล้เคียงโดยไม่เกินเป้าหมาย (เมื่อทำได้)</p>
+            <div id="pdfWarning" class="pdf-warning" hidden>
+              <strong>โปรดทราบก่อนบีบอัด PDF</strong>
+              <p>การบีบอัดจะเปลี่ยนหน้าเอกสารเป็นภาพ อาจทำให้ค้นหาหรือคัดลอกข้อความไม่ได้ รวมถึงสูญเสียลิงก์ แบบฟอร์ม และลายเซ็นดิจิทัล ควรเก็บไฟล์ต้นฉบับไว้</p>
+              <label><input id="pdfAcknowledgement" type="checkbox"> <span>ฉันเข้าใจข้อจำกัดและจะตรวจสอบไฟล์หลังดาวน์โหลด</span></label>
+            </div>
             <div id="formError" class="form-error" role="alert" hidden></div>
             <button type="submit" id="compressButton" class="primary-button"><span id="buttonText">เริ่มบีบอัดไฟล์</span><svg class="ico" aria-hidden="true"><use href="#ic-arrow"/></svg></button>
           </form>
@@ -389,7 +405,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   }
   let pdfjsPromise;
   async function pdfLibrary() {
-    if (!pdfjsPromise) pdfjsPromise = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');
+    if (!pdfjsPromise) pdfjsPromise = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs').catch(err=>{pdfjsPromise=null;throw err;});
     const pdfjs = await pdfjsPromise;
     pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
     return pdfjs;
@@ -495,7 +511,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   const ui={
     form:$('compressForm'),fileInput:$('fileInput'),dropzone:$('dropzone'),pickedFile:$('pickedFile'),
     fileGlyph:$('fileGlyph'),fileName:$('fileName'),fileSize:$('fileSize'),clearFile:$('clearFile'),
-    target:$('targetSize'),unit:$('targetUnit'),error:$('formError'),button:$('compressButton'),
+    target:$('targetSize'),unit:$('targetUnit'),error:$('formError'),pdfWarning:$('pdfWarning'),pdfAcknowledgement:$('pdfAcknowledgement'),button:$('compressButton'),
     buttonText:$('buttonText'),processing:$('processing'),progress:$('progressText'),result:$('result'),
     resultTitle:$('resultTitle'),resultSubtitle:$('resultSubtitle'),original:$('originalSize'),
     updated:$('newSize'),reductionBar:$('reductionBar'),resultNote:$('resultNote'),
@@ -510,17 +526,25 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   function clearResult() {ui.result.hidden=true;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;outputFile='';ui.reductionBar.style.width='0%';}
   function select(file) {
     if(working)return;error();clearResult();selected=null;
+    ui.pdfWarning.hidden=true;ui.pdfAcknowledgement.checked=false;
     if(!file){ui.fileInput.value='';ui.pickedFile.hidden=true;ui.dropzone.hidden=false;return;}
     if(!extSet.has(ext(file))){error('รองรับ PDF, DOCX, XLSX, PPTX, JPG, PNG และ WEBP เท่านั้น');return;}
     if(!file.size){error('ไฟล์ว่างเปล่า กรุณาเลือกไฟล์ใหม่');return;}
     if(file.size>25*1024*1024){error('ไฟล์ใหญ่เกิน 25 MB กรุณาเลือกไฟล์ที่เล็กกว่า');return;}
-    selected=file;ui.fileGlyph.textContent=glyphs[ext(file)];
+    selected=file;ui.pdfWarning.hidden=ext(file)!=='pdf';ui.fileGlyph.textContent=glyphs[ext(file)];
     const hue={pdf:['#fce9e8','#b84a48'],docx:['#e7efff','#355da4'],xlsx:['#e4f6ea','#22865b'],pptx:['#fff0df','#b46b3d']}[ext(file)]||['#f0e9ff','#7856b7'];
     ui.fileGlyph.style.background=hue[0];ui.fileGlyph.style.color=hue[1];
     ui.fileName.textContent=file.name;ui.fileName.title=file.name;
     ui.fileSize.textContent=fmt(file.size)+(ext(file)==='pdf'?' · PDF จะเปลี่ยนหน้าเป็นภาพ เลือกข้อความไม่ได้':'');
     ui.pickedFile.hidden=false;ui.dropzone.hidden=true;
   }
+  function syncTargetConstraints(){
+    const inMB=ui.unit.value==='MB';
+    ui.target.min=inMB?String(1/1024):'1';
+    ui.target.max=inMB?'25':'25600';
+  }
+  syncTargetConstraints();
+  ui.unit.addEventListener('change',syncTargetConstraints);
   ui.fileInput.addEventListener('change',e=>select(e.target.files[0]));
   ui.clearFile.addEventListener('click',()=>select(null));
   ui.reset.addEventListener('click',()=>{select(null);ui.fileInput.focus();});
@@ -532,6 +556,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   ui.form.addEventListener('submit',async e=>{
     e.preventDefault();if(working)return;error();clearResult();
     if(!selected){error('กรุณาเลือกไฟล์ก่อนเริ่มบีบอัด');ui.fileInput.focus();return;}
+    if(ext(selected)==='pdf'&&!ui.pdfAcknowledgement.checked){error('กรุณาอ่านและยืนยันข้อจำกัดการบีบอัด PDF ก่อนดำเนินการ');ui.pdfAcknowledgement.focus();return;}
     const inputValue=ui.target.value.trim();
     const targetBytes=inputValue==='' ? null : Number(inputValue)*(ui.unit.value==='MB'?1048576:1024);
     if(targetBytes!==null && (!Number.isFinite(targetBytes)||targetBytes<1024||targetBytes>25*1048576)){
@@ -540,7 +565,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     const quality=ui.form.querySelector('input[name="quality"]:checked').value;
     working=true;ui.processing.hidden=false;ui.button.disabled=true;
     ui.buttonText.textContent='กำลังประมวลผล...';
-    ui.fileInput.disabled=true;ui.target.disabled=true;ui.unit.disabled=true;
+    ui.fileInput.disabled=true;ui.target.disabled=true;ui.unit.disabled=true;ui.pdfAcknowledgement.disabled=true;
     ui.form.querySelectorAll('input[name="quality"]').forEach(input=>{input.disabled=true;});
     const input=selected;
     try {
@@ -562,7 +587,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     finally {
       working=false;ui.processing.hidden=true;ui.button.disabled=false;
       ui.buttonText.textContent='เริ่มบีบอัดไฟล์';ui.fileInput.disabled=false;
-      ui.target.disabled=false;ui.unit.disabled=false;
+      ui.target.disabled=false;ui.unit.disabled=false;ui.pdfAcknowledgement.disabled=false;
       ui.form.querySelectorAll('input[name="quality"]').forEach(input=>{input.disabled=false;});
     }
   });
